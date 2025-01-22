@@ -66,3 +66,120 @@ ggplot(activity_minutes_avg, aes(x = ActivityType, y = AvgMinutes, fill = Activi
        x = "Activity Type",
        y = "Average Minutes")
 
+###############################################################
+###                 HEART RATE EXPLORATION                 ###
+###############################################################
+head(heart_rate)
+str(heart_rate)
+summary(heart_rate)
+
+#Convert the Time column to datetime to extract hour and group by period of the day
+heart_rate <- heart_rate %>%
+  mutate(Time = as.POSIXct(Time, format = "%m/%d/%Y %I:%M:%S %p"),
+         Period = case_when(format(Time, "%H") < 12 ~ "Morning",
+                            format(Time, "%H") >= 12 & format(Time, "%H") < 18 ~ "Afternoon",
+                            TRUE ~ "Evening"))
+
+# Calculate the mean for each period of the day
+heart_rate_summary <- heart_rate %>%
+  group_by(Period) %>%
+  summarize(AvgHeartRate = mean(Value, na.rm = TRUE))
+
+# Visualize the relationship between the heart rate and the period of the day
+ggplot(heart_rate_summary, aes(x = Period, y = AvgHeartRate, fill = Period)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  labs(title = "Average Heart Rate by Period of the Day",
+       x = "Period of the Day",
+       y = "Average Heart Rate")
+
+# Calculate the mean for each hour
+heart_rate_hour <- heart_rate %>%
+  mutate(Time = as.POSIXct(Time, format = "%m/%d/%Y %I:%M:%S %p"),
+         Hour = format(Time, "%H")) %>%
+  group_by(Hour) %>%
+  summarize(AvgHeartRate = mean(Value))
+
+#Create a line graph to visualize the evolution of heart rate throughout the day
+ggplot(heart_rate_hour, aes(x = as.numeric(Hour), y = AvgHeartRate)) +
+  geom_line(color = "red") +
+  labs(title = "Average Heart Rate by Hour",
+       x = "Hour of the Day", y = "Average Heart Rate")
+
+
+
+
+###############################################################
+###               HOURLY CALORIES EXPLORATION              ###
+###############################################################
+head(hourly_calories)
+str(hourly_calories)
+summary(hourly_calories)
+
+# Transformr data to calculate the average calories burned by hour
+hourly_calories_avg <- hourly_calories %>%
+  mutate(ActivityHour = as.POSIXct(ActivityHour, format = "%m/%d/%Y %I:%M:%S %p"),
+         Hour = format(ActivityHour, "%H")) %>%
+  group_by(Hour) %>%
+  summarize(AvgCalories = mean(Calories))
+
+# Visualize the calories per hour
+ggplot(hourly_calories_avg, aes(x = as.numeric(Hour), y = AvgCalories)) +
+  geom_line(color = "blue") +
+  labs(title = "Average Calories Burned by Hour",
+       x = "Hour of the Day", y = "Average Calories")
+
+
+###############################################################
+###                HOURLY STEPS EXPLORATION               ###
+###############################################################
+head(hourly_steps)
+str(hourly_steps)
+summary(hourly_steps)
+
+# Transformar y resumir datos
+hourly_steps_avg <- hourly_steps %>%
+  mutate(ActivityHour = as.POSIXct(ActivityHour, format = "%m/%d/%Y %I:%M:%S %p"),
+         Hour = format(ActivityHour, "%H")) %>%
+  group_by(Hour) %>%
+  summarize(AvgSteps = mean(StepTotal))
+
+# Gráfico
+ggplot(hourly_steps_avg, aes(x = as.numeric(Hour), y = AvgSteps)) +
+  geom_line(color = "green") +
+  labs(title = "Average Steps by Hour",
+       x = "Hour of the Day", y = "Average Steps")
+
+###############################################################
+###                 MINUTE SLEEP EXPLORATION                ###
+###############################################################
+head(minute_sleep)
+str(minute_sleep)
+summary(minute_sleep)
+
+sleep_summary <- minute_sleep %>%
+  mutate(date = as.Date(date, format = "%m/%d/%Y %I:%M:%S %p")) %>%
+  group_by(Id, date) %>%
+  summarize(TotalMinutes = n(),
+            LightSleepMinutes = sum(value == 1, na.rm = TRUE),
+            DeepSleepMinutes = sum(value == 2, na.rm = TRUE),
+            RestlessMinutes = sum(value == 3, na.rm = TRUE)) %>%
+  mutate(LightSleepPercentage = LightSleepMinutes / TotalMinutes * 100,
+         DeepSleepPercentage = DeepSleepMinutes / TotalMinutes * 100,
+         RestlessPercentage = RestlessMinutes / TotalMinutes * 100)
+
+ggplot(sleep_summary, aes(x = DeepSleepPercentage)) +
+  geom_histogram(bins = 30, fill = "blue", color = "white") +
+  labs(title = "Distribution of Deep Sleep Percentage",
+       x = "Percentage of Deep Sleep",
+       y = "Frequency")
+
+###############################################################
+###               WEIGHT INFO EXPLORATION              ###
+###############################################################
+head(weight_info)
+str(weight_info)
+summary(weight_info)
+
+length(unique(weight_info$Id))
+
+#With only 33 entries and 11 users, the data are not representative for assessing weight loss as a primary goal.
