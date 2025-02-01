@@ -107,7 +107,6 @@ ggplot(heart_rate_hour, aes(x = as.numeric(Hour), y = AvgHeartRate)) +
 
 
 
-
 ###############################################################
 ###               HOURLY CALORIES EXPLORATION              ###
 ###############################################################
@@ -129,6 +128,7 @@ ggplot(hourly_calories_avg, aes(x = as.numeric(Hour), y = AvgCalories)) +
        x = "Hour of the Day", y = "Average Calories")
 
 
+
 ###############################################################
 ###                HOURLY STEPS EXPLORATION               ###
 ###############################################################
@@ -148,6 +148,8 @@ ggplot(hourly_steps_avg, aes(x = as.numeric(Hour), y = AvgSteps)) +
   geom_line(color = "green") +
   labs(title = "Average Steps by Hour",
        x = "Hour of the Day", y = "Average Steps")
+
+
 
 ###############################################################
 ###                 MINUTE SLEEP EXPLORATION                ###
@@ -173,8 +175,10 @@ ggplot(sleep_summary, aes(x = DeepSleepPercentage)) +
        x = "Percentage of Deep Sleep",
        y = "Frequency")
 
+
+
 ###############################################################
-###               WEIGHT INFO EXPLORATION              ###
+###                 WEIGHT INFO EXPLORATION                ###
 ###############################################################
 head(weight_info)
 str(weight_info)
@@ -183,3 +187,11 @@ summary(weight_info)
 length(unique(weight_info$Id))
 
 #With only 33 entries and 11 users, the data are not representative for assessing weight loss as a primary goal.
+
+
+###############################################################
+###                 WEIGHT INFO EXPLORATION                ###
+###############################################################
+
+
+
