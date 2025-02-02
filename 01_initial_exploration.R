@@ -27,7 +27,7 @@ weight_info <- read_csv("data/weightLogInfo_merged.csv")
 
 
 ###############################################################
-###               DAILY ACTIVITY EXPLORATION               ###
+###                DAILY ACTIVITY EXPLORATION               ###
 ###############################################################
 head(daily_activity)
 str(daily_activity)
@@ -67,7 +67,7 @@ ggplot(activity_minutes_avg, aes(x = ActivityType, y = AvgMinutes, fill = Activi
        y = "Average Minutes")
 
 ###############################################################
-###                 HEART RATE EXPLORATION                 ###
+###                 HEART RATE EXPLORATION                  ###
 ###############################################################
 head(heart_rate)
 str(heart_rate)
@@ -108,7 +108,7 @@ ggplot(heart_rate_hour, aes(x = as.numeric(Hour), y = AvgHeartRate)) +
 
 
 ###############################################################
-###               HOURLY CALORIES EXPLORATION              ###
+###                HOURLY CALORIES EXPLORATION              ###
 ###############################################################
 head(hourly_calories)
 str(hourly_calories)
@@ -130,7 +130,7 @@ ggplot(hourly_calories_avg, aes(x = as.numeric(Hour), y = AvgCalories)) +
 
 
 ###############################################################
-###                HOURLY STEPS EXPLORATION               ###
+###                 HOURLY STEPS EXPLORATION                ###
 ###############################################################
 head(hourly_steps)
 str(hourly_steps)
@@ -162,23 +162,25 @@ sleep_summary <- minute_sleep %>%
   mutate(date = as.Date(date, format = "%m/%d/%Y %I:%M:%S %p")) %>%
   group_by(Id, date) %>%
   summarize(TotalMinutes = n(),
-            LightSleepMinutes = sum(value == 1, na.rm = TRUE),
-            DeepSleepMinutes = sum(value == 2, na.rm = TRUE),
-            RestlessMinutes = sum(value == 3, na.rm = TRUE)) %>%
+            LightSleepMinutes = sum(value == 1),
+            DeepSleepMinutes = sum(value == 2),
+            RestlessMinutes = sum(value == 3)) %>%
   mutate(LightSleepPercentage = LightSleepMinutes / TotalMinutes * 100,
          DeepSleepPercentage = DeepSleepMinutes / TotalMinutes * 100,
          RestlessPercentage = RestlessMinutes / TotalMinutes * 100)
 
 ggplot(sleep_summary, aes(x = DeepSleepPercentage)) +
-  geom_histogram(bins = 30, fill = "blue", color = "white") +
+  geom_histogram(bins = 30, fill = "blue") +
   labs(title = "Distribution of Deep Sleep Percentage",
        x = "Percentage of Deep Sleep",
        y = "Frequency")
 
+# The majority of users have a very low percentage of deep sleep compared to what is recommended (20%).
+
 
 
 ###############################################################
-###                 WEIGHT INFO EXPLORATION                ###
+###                 WEIGHT INFO EXPLORATION                 ###
 ###############################################################
 head(weight_info)
 str(weight_info)
@@ -189,9 +191,50 @@ length(unique(weight_info$Id))
 #With only 33 entries and 11 users, the data are not representative for assessing weight loss as a primary goal.
 
 
+
 ###############################################################
-###                 WEIGHT INFO EXPLORATION                ###
+###             SEGMENTATION BY LEVEL ACTIVITY              ###
 ###############################################################
 
+# Classify users by their level of physical activity based on TotalSteps
+daily_activity <- daily_activity%>%
+  mutate (ActivityLevel = case_when(
+    TotalSteps < 5000 ~ "Sedentary",
+    TotalSteps >= 5000 & TotalSteps < 10000 ~ "Moderately Active",
+    TotalSteps >= 10000 ~ "Highly Active"))
+
+ggplot(daily_activity, aes(x=ActivityLevel)) +
+         geom_bar(fill = "red") +
+         labs(
+           title = "Distribution of Activity Levels",
+           x = "Activity Level",
+           y = "Number of Users")
+
+# Relating activity levels to quality of sleep
+# First we need to unify the date format
+daily_activity <- daily_activity %>%
+  mutate(ActivityDate = as.Date(as.character(ActivityDate), format = "%m/%d/%Y"))
+
+sleep_summary <- sleep_summary %>%
+  mutate(date = as.Date(as.character(date), format = "%Y-%m-%d"))
+
+combined_data <- merge(daily_activity, sleep_summary, by.x = c("Id", "ActivityDate"), by.y = c("Id", "date"))
+
+
+# Calculate mean for each type of sleep by the activity level
+sleep_vs_activity <- combined_data %>%
+  group_by(ActivityLevel) %>%
+  summarize(
+    AvgLightSleep = mean(LightSleepPercentage),
+    AvgDeepSleep = mean(DeepSleepPercentage),
+    AvgRestless = mean(RestlessPercentage))
+
+# Visualization
+ggplot(sleep_vs_activity, aes(x = ActivityLevel, y = AvgDeepSleep, fill = ActivityLevel)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Deep Sleep Percentage by Activity Level",
+    x = "Activity Level",
+    y = "Average Deep Sleep Percentage")
 
 
